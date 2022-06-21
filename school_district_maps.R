@@ -7,10 +7,7 @@ library(precrec)
 
 shape <- readOGR(dsn=".", layer="SCHOOLDISTRICTS_POLY")
 
-head(shape@data, 10)
-
-plot(shape)
-
+library(tidyverse)
 library(tidycensus)
 library(viridis)
 key = "feff854f778d95f02fa512b65a8b3cb44fe04782"
@@ -28,7 +25,6 @@ maelem <- get_acs(geography ="school district (elementary)", variables = "B19013
   mutate(type="Elementary")
 
 madist <- bind_rows(maunified, masecondary, maelem)
-school district(secondary)
 
 library(ggpattern)
 ggplot()+
@@ -39,5 +35,9 @@ ggplot()+
   scale_fill_viridis(option = "magma") +
   scale_color_viridis(option = "magma")
   
+  ggplot()+
+    geom_sf(data=maunified[14,6])
+  
+
   
 acs2020 <- load_variables(2020, "acs5", cache = TRUE)

@@ -179,10 +179,11 @@ all6norm <- all6 %>%
          )%>%
   mutate(across(enrollpergrade:asian, ~ nor(.x)))
 
-
-neighbors <- get.knn(data=all6norm[,-(1:3)], k=10, algorithm = "cover_tree")
+library(FNN)
+neighbors <- get.knn(data=all6norm[,-(1:3)], k=5, algorithm = "cover_tree")
 
 distance <- neighbors$nn.dist
+neighs <- neighbors$nn.index 
 
 knn5 <- as.data.frame(neighbors$nn.index)%>%
   # mutate(distance=neighbors$nn.dist)%>%
@@ -201,12 +202,12 @@ targetneighs <- all6 %>%
                     target$V2, 
                     target$V3, 
                     target$V4, 
-                    target$V5, 
-                    target$V6, 
-                    target$V7, 
-                    target$V8, 
-                    target$V9, 
-                    target$V10
+                    target$V5
+                    # target$V6, 
+                    # target$V7, 
+                    # target$V8, 
+                    # target$V9, 
+                    # target$V10
                     ))%>%
   bind_rows(subset(all6,district_code=="00570000"))
 
