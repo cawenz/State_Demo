@@ -1,16 +1,10 @@
-
+# Define Mode function
 Mode <- function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 }
 
-nor <-function(x) { (x -min(x))/(max(x)-min(x))} 
 
-scale_this <- function(x){
-  (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
-}
-
-#
 #*****************************************************************************************
 #
 # Enroll by Grade
@@ -27,9 +21,9 @@ enrollbygradefiles <- lapply(enrollbygradefolder, function(i){
 )
 
 gradesoffered <-  read_excel("data/DESEdata/GradesByDistricts.xlsx", 
-                                col_types = c("skip", "text", "text"))%>%
+                             col_types = c("skip", "text", "text"))%>%
   janitor::clean_names()
-  
+
 enrollbygrade <- bind_rows(enrollbygradefiles)%>%
   mutate(year=str_sub(file,start=-9L, end=-6L ))%>%
   select(-file)%>%
@@ -95,12 +89,12 @@ rg6 <- racegender %>%
   group_by(district_name, district_code)%>%
   summarize(across(african_american:total, ~ round(weighted.mean(.x/total), digits=3)*100))%>%
   select(-non_binary, -total)
-  
-  names(rg6) <- c("district_name","district_code", 
-                  "black", "asian", "hispanic", 
-                  "white", "native", "nativeHPI", 
-                  "multi", "male", "female"
-                  )
+
+names(rg6) <- c("district_name","district_code", 
+                "black", "asian", "hispanic", 
+                "white", "native", "nativeHPI", 
+                "multi", "male", "female"
+)
 
 #*****************************************************************************************
 #
@@ -132,7 +126,7 @@ selectpop <- bind_rows(selectpopfiles)%>%
     high_needs_percent=high_needs_number_16
   )%>%
   left_join(enrolltotal)
-  
+
 # Get 6 year average
 
 selectpop6 <- selectpop %>%
@@ -153,81 +147,20 @@ names(selectpop6) <- str_remove_all(names(selectpop6), "_number")
 all6frames <- list(enroll6, rg6, selectpop6)
 
 all6 <- reduce(all6frames, full_join)%>%
-  filter(!grepl("(District)", district_name) & 
-  !grepl("Vocational", district_name) & 
-  !grepl("Agricult", district_name) & 
-  district_code != "04680000" & district_code !=  "00000000") %>% 
-  relocate(district_name)%>%
-  drop_na()%>%
-  mutate(row=row_number(), 
-         nonwhite=100-white) %>% 
-  relocate(row)
-
-all6norm <- all6 %>%
-  select(
-         row:district_code,
-         enrollpergrade,
-         total,
-         numgrades,
-         first_language_not_english,
-         english_language_learner, 
-         economically_disadvantaged, 
-         students_with_disabilities,
-         hispanic, black,white,multi, asian
-         )%>%
-  mutate(across(enrollpergrade:asian, ~ nor(.x)))
-
-all6match <- all6norm %>%
-  select(row:district_code)
-
-all6targetmatch <- all6norm %>%
-  select(row:district_code)%>%
-  rename(target_code=district_code, 
-         target_district=district_name)
-
-library(FNN)
-neighbors <- get.knn(data=all6norm[,-(1:3)], k=5, algorithm = "cover_tree")
-
-distance <- neighbors$nn.dist
-neighs <- neighbors$nn.index 
-
-knn5 <- as.data.frame(neighbors$nn.index)%>%
-  mutate(row=row_number())%>%
-  left_join(all6match)%>%
-  rename(targetrow=row)%>%
-  pivot_longer(cols=V1:V5, names_to="names", values_to="row")%>%
-  left_join(all6targetmatch)
-  
-  
-  unite(.,col="neighs", V1:V5, sep=",", remove=F )%>%
-  mutate(set=paste0("c(", neighs, ")"))
-
-index <- left_join(knn5, all6[,1:3])
-
-target <- index %>%
-  filter(district_code=="00570000")
-
-targetneighs <- all6 %>%
-  # mutate(row=as.character(row))%>%
-  filter(row %in% c(target$V1, 
-                    target$V2, 
-                    target$V3, 
-                    target$V4, 
-                    target$V5
-                    # target$V6, 
-                    # target$V7, 
-                    # target$V8, 
-                    # target$V9, 
-                    # target$V10
-                    ))%>%
-  bind_rows(subset(all6,district_code=="00570000"))
-
-library(mclust)
-testclust <- Mclust(all6norm[,-(1:3)], G=2:30)
-plot(testclust)
-  
-summary(testclust)
-
-all6norm$cluster <- testclust$classification
+  left_join(fullGEOS, by=c("district_code"="MAdisID"))%>%
+  mutate(drop=
+           ifelse((is.na(GSLO) & district_code!= "00000000"), T,F)
+  )%>%
+  filter(drop==F)%>%
+  # left_join(madist, by=c("LEAID"="GEOID"))%>%
+  select(-per_capita_income_moe, -drop, -nomatch, -variable, -CHARTER_LEA_TEXT, -longitude,-latitude)%>%
+  mutate(
+    typegroup=
+      ifelse(type2=="Charter" & LEVEL %in% c("Elementary", "Middle"), "Elementary",
+       ifelse(type2=="Charter" & LEVEL == "High", "Secondary", 
+        ifelse(type2=="Charter" & LEVEL == "Other", "Unified",
+         ifelse(type2=="Tech-Voc-Ag", "Secondary",
+          ifelse(type2=="Virtual", "Unified", type2
+          ))))))
 
 

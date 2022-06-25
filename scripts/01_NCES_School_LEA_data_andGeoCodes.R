@@ -1,11 +1,12 @@
 library(readr)
 library(tidyverse)
+library(tidygeocoder)
 #*****************************************************************************************
 #
 # Clean the NCES LEA data for 21-22
 #
 #*****************************************************************************************
-ccd_lea_029_2122_w_0a_022522<- read_csv("~/Code/State_Demo/data/NCESdata/ccd_lea_029_2122_w_0a_022522.csv", 
+ccd_lea_029_2122_w_0a_022522<- read_csv("data/NCESdata/ccd_lea_029_2122_w_0a_022522.csv", 
                                          col_types = cols(ST_LEAID = col_character(), 
                                                           LZIP=col_character(),
                                                           MZIP=col_character(),
@@ -43,7 +44,7 @@ ccdlea2122 <- map2_df(ccd_lea_029_2122_w_0a_022522, names(ccd_lea_029_2122_w_0a_
 options(scipen=999)
 library(readxl)
 library(readr)
-ccd_sch_029_2122_w_0a_022522 <- read_csv("~/Code/State_Demo/data/NCESdata/ccd_sch_029_2122_w_0a_022522.csv")%>%
+ccd_sch_029_2122_w_0a_022522 <- read_csv("data/NCESdata/ccd_sch_029_2122_w_0a_022522.csv")%>%
   filter(ST=="MA")%>%
   mutate(LZIP=paste0("0", LZIP),
          MZIP=paste0("0", MZIP), 
@@ -68,7 +69,14 @@ ccdsch2122 <-
   mutate(CHARTER_TEXT=ifelse(CHARTER_TEXT=="CHARTER_TEXT","Yes", CHARTER_TEXT))
 
 
-MAgeoDIS <- left_join(ccdlea2122, madist, by=c("LEAID"="GEOID"))%>%
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+# Merge the census district data with the Federal list of LEAs
+#
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+MAgeoDIS <- left_join(ccdlea2122, madistcensus, by=c("LEAID"="geoid"))%>%
   mutate(nomatch=is.na(type),
          addrGEOID=
                   ifelse(MAdisID=="04140000", "1 Commercial St, Adams, MA 01220",
@@ -97,48 +105,7 @@ fullGEOS <- MAgeoDIS %>%
 # Store the geography for the districts in geoJson format
 
 maDistPolygons <- fullGEOS %>%
-  filter(type2 %in% c("Unified","Elementary", "Secondary")) %>% 
+  filter(type2 %in% c("Unified","Elementary","Secondary")) %>% 
   select(MAdisID, type, geometry)
 
-
-library(geojsonio)
-library(geojsonsf)
-library(geojson)
-
-madistgeo <- sfc_geojson(maDistPolygons$geometry)
-  
-
-multipolygon(maDistPolygons$geometry)
-
-library(rgdal)
-
-
-shape <- readOGR(dsn="./schooldistricts_shapes", layer="SCHOOLDISTRICTS_POLY")
-
-library(sf)
-   districts_sfc<- read_sf("schooldistricts_shapes/SCHOOLDISTRICTS_POLY.shp", as_tibble = F)
-
-   library(tidyverse)
-   plot(districts_sfc) %>%
-     ggplot()+
-     geom_sf()
-     plot(CE.sf)
-     
-library(leaflet)
-     
-     leaflet(wtf)%>%
-       setView(lng = -71.926663, lat = 42.377938, zoom = 8)%>%
-       addTiles()%>%
-       addPolygons(group="type")
-       
-sf::st_write(madist, "madist.geojson")
-library(geojsonsf)     
-wtf <- geojson_sf("madist.geojson")
-
-   
-   CE.sf %>% 
-     ggplot() +
-     geom_sf(color = "black", size = 0.4)
-    
-    sf_geojson( districts_sfc, simplify=T, digits=5)
-  
+sf::st_write(fullGEOS, "output/fullGEOSmass.geojson")

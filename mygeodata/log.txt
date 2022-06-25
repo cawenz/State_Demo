@@ -1,0 +1,30 @@
+Warning 6: Normalized/laundered field name: 'description' to 'descriptio'
+Warning 6: Normalized/laundered field name: 'description' to 'descriptio'
+Warning 6: Normalized/laundered field name: 'description' to 'descriptio'
+Warning 1: Value '
+
+<table>
+<tr valign="top">
+<td>
+<img src="https://hostingdata2.tighebond.com/arcgis/rest/services/Holyoke/HPSDynamic/MapServer/export?bbox=-72.72816191134014,42.18584205106348,-72.54020478274133,42.28667464056717&bboxSR=4326&imageSR=4326&size=150,150&f=image" alt="KMZ Image"/><br/>
+<a href="https://hostingdata2.tighebond.com/arcgis/rest/services/Holyoke/HPSDynamic/MapServer">more...</a>
+</td>
+<td>
+Title: <b>Working</b><br/>
+Author: <b>mls</b><br/>
+Comments: <b></b><br/>
+Subject: <b></b><br/>
+Category: <b></b><br/>
+AntialiasingMode: <b>None</b><br/>
+TextAntialiasingMode: <b>Force</b><br/>
+Keywords: <b></b><br/>
+</td>
+</tr>
+</table>
+<br/>
+<b>Service Description: </b> <br/><br/>
+<b>Description: </b> <br/><br/>
+<b>Copyright Text: </b> <br/> <br/>
+<b>Full Extent: </b>[-72.72816191134014, 42.18584205106348] - [-72.54020478274133, 42.28667464056717]<br/><br/>
+
+' of field descriptio has been truncated to 254 characters.  This warning will not be emitted any more for that layer.
