@@ -85,13 +85,26 @@ madist <- bind_rows(maunified, masecondary, maelem)%>%
     variable == "B06009_006" ~ "Education_GradorProfessional",
     variable == "B19013_001" ~ "Median_Income", 
     variable == "B19301_001" ~ "PerCapita_Income"
-     ))%>%
-  pivot_wider(names_from=name, values_from=c("estimate", "moe"), 
-              names_glue= "{name}_{.value}")%>%
+    ))
+
+madistgeometry <- madist %>%
+  select(GEOID, geometry)%>%
   group_by(GEOID)%>%
+  slice(1)
+
+madist$geometry <- NULL
+
+macensus <- madist %>%
+  mutate(rowid=row_number())%>%
+  relocate(rowid)%>%
+  pivot_longer(cols=estimate:moe, names_to="measure", values_to="value")%>%
+  pivot_wider(id_cols=rowid:type, names_from=c("name", "measure"),
+              values_from = value)%>%
   fill(Education_Total_estimate:PerCapita_Income_moe, .direction="up")%>%
   group_by(GEOID) %>% 
   slice(1)%>%
+  select(-variable, -rowid)%>%
+  left_join(madistgeometry)%>%
   select(GEOID:geometry, starts_with("Education"), starts_with("Poverty"),
          starts_with("Median"), starts_with("PerCapita"))
 
@@ -101,7 +114,7 @@ madist <- bind_rows(maunified, masecondary, maelem)%>%
 #
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-madistcensus <- madist %>%
+madistcensus <- macensus %>%
   ungroup()%>%
   mutate(
     belowHS=round(Education_LessThanHS_estimate/Education_Total_estimate,3)*100,
@@ -124,3 +137,5 @@ madistcensus <- madist %>%
   drop_na(PerCapita_Income_moe)%>%
   janitor::clean_names()%>%
   relocate(geometry, .after=per_capita_income_moe)
+
+rm(censusvars, macensus, madist)

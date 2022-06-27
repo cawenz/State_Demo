@@ -153,7 +153,7 @@ all6 <- reduce(all6frames, full_join)%>%
   )%>%
   filter(drop==F)%>%
   # left_join(madist, by=c("LEAID"="GEOID"))%>%
-  select(-per_capita_income_moe, -drop, -nomatch, -variable, -CHARTER_LEA_TEXT, -longitude,-latitude)%>%
+  select(-per_capita_income_moe, -drop, -nomatch, -CHARTER_LEA_TEXT, -longitude,-latitude)%>%
   mutate(
     typegroup=
       ifelse(type2=="Charter" & LEVEL %in% c("Elementary", "Middle"), "Elementary",
@@ -162,5 +162,3 @@ all6 <- reduce(all6frames, full_join)%>%
          ifelse(type2=="Tech-Voc-Ag", "Secondary",
           ifelse(type2=="Virtual", "Unified", type2
           ))))))
-
-

@@ -32,6 +32,24 @@ allsimp <- all6 %>%
   )%>%
   relocate(row)
 
+#
+#*****************************************************************************************
+#
+# Get the DART merge 
+#
+#*****************************************************************************************
+#
+dartmatches <- read_csv("output/dartmatches.csv")
+
+
+dartmerge <- dartmatches %>%
+  filter(targetrow!=1)%>%
+  mutate(neighbor=row_number())%>%
+  relocate(neighbor)%>%
+  rename(
+    district_code=MAdisID, 
+    target_DART=target)
+
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #
 # Unified 5 neighbors
@@ -61,18 +79,6 @@ uniknn <- unified %>%
   left_join(dartmerge)
 
 
-
-library(readr)
-dartmatches <- read_csv("output/dartmatches.csv")
-
-
-dartmerge <- dartmatches %>%
-  filter(targetrow!=1)%>%
-  mutate(neighbor=row_number())%>%
-  relocate(neighbor)%>%
-  rename(
-         district_code=MAdisID, 
-         target_DART=target)
 
 secondary <- allsimp %>%
   filter(typegroup=="Secondary")
